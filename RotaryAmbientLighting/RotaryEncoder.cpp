@@ -22,8 +22,9 @@ uint8_t rotaryEncoder_Table[] = { 0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0
 uint8_t prevNextCode = 0;
 uint16_t store = 0;
 
-//
+// Variables for debouncing switch signals.
 unsigned long sw_DebounceMillis;
+uint8_t sw_LastState;
 
 #pragma endregion
 
@@ -95,30 +96,36 @@ int8_t rotaryEncoder_ReadNewRotation() {
 
 /*
  * @brief Reads the value of the rotary encoder's switch.
+ * Returns 1 for valid 'switch pressed'.
+ * Returns -1 for valid 'switch not pressed'.
+ * Returns 0 for invalid switch state.
  */
-boolean rotaryEncoder_ReadSwitch() {
+int8_t rotaryEncoder_ReadSwitch() {
 
 	// Read the value of the SW pin. It has to be low to be registered as being pressed.
 	uint8_t sw_State = *portInputRegister(digitalPinToPort(ROTARY_ENCODER_SW_PIN)) & digitalPinToBitMask(ROTARY_ENCODER_SW_PIN);
 
-	// Only return 'true' if the state is low and the debounce window has passed.
-	if (sw_State == LOW) {
+	unsigned long now = millis();
 
-		unsigned long now = millis();
-
-		if (now > sw_DebounceMillis) {
-
-			// Set to maximum possible value to avoid running this when unwanted.
-			sw_DebounceMillis = UINT32_MAX;
-
-			return true;
-		}
+	// If the state has changed, debouncing is required.
+	if (sw_State != sw_LastState) {
 
 		// Set the debounce millis.
 		sw_DebounceMillis = now + ROTARY_ENCODER_SW_DEBOUNCE_MILLIS;
+
+		sw_LastState = sw_State;
+	}
+	// If the state hasn't changed, and we've exceeded the debounce period, return a proper value.
+	else if (now > sw_DebounceMillis) {
+
+		// We don't reset the sw_DebounceMillis variable here because we've already debounced the
+		// signal. If it remains the same then it is safe to assume that it is being held at this
+		// point. If we were to reset it, features such as long press would not be possible.
+
+		return sw_State == LOW ? 1 : -1;
 	}
 
-	return false;
+	return 0;
 }
 
 #pragma endregion

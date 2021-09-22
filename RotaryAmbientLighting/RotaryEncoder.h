@@ -16,7 +16,10 @@ int8_t rotaryEncoder_ReadNewRotation();
 
 /*
  * @brief Reads the value of the rotary encoder's switch.
+ * Returns 1 for valid 'switch pressed'.
+ * Returns -1 for valid 'switch not pressed'.
+ * Returns 0 for invalid switch state.
  */
-boolean rotaryEncoder_ReadSwitch();
+int8_t rotaryEncoder_ReadSwitch();
 
 #endif

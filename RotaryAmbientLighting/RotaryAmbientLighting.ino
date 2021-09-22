@@ -31,6 +31,7 @@ boolean adjustingBrightness;
 
 // Values that can be modified for LED display.
 uint8_t led_Brightness, led_Hue;
+CRGB led_RGB;
 
 // LED control variables.
 CLEDController* ledController_Door, * ledController_Footwell;
@@ -58,29 +59,56 @@ void setup() {
 	ledController_Footwell = &FastLED.addLeds<LED_TYPE_FOOTWELL, LED_PIN_FOOTWELL, LED_ORDER_FOOTWELL>(leds_Footwell, LED_COUNT_FOOTWELL);
 }
 
+int8_t rotaryEncoder_LastSW;
+
+unsigned long rotaryEncoder_SWLongPressMillis;
+
 /*
  * @brief Runs continuously.
  */
 void loop() {
 
+	unsigned long now = millis();
+
 	// Handle press of rotary encoder's switch.
-	boolean rotaryEncoder_SW = rotaryEncoder_ReadSwitch();
+	int8_t rotaryEncoder_SW = rotaryEncoder_ReadSwitch();
 
-	if (rotaryEncoder_SW && rotaryEncoder_SW != rotaryEncoder_LastSwitch) {
+	if (rotaryEncoder_SW == 1) {
 
-		adjustingBrightness = !adjustingBrightness;
+		// Handle single press of the switch.
+		if (rotaryEncoder_SW != rotaryEncoder_LastSW) {
 
-		return;
+			adjustingBrightness = !adjustingBrightness;
+
+			// Set the long press millis.
+			rotaryEncoder_SWLongPressMillis = now + ROTARY_SW_LONG_PRESS_MILLIS;
+		}
+		// At this point, the switch is held. Check if we've exceeded the required time delay before handling.
+		else if (now > rotaryEncoder_SWLongPressMillis) {
+
+			// Long pressing resets the displayed color to white.
+			// This is the only way to access this color, so enable adjusting brightness
+			// mode to avoid accidentally changing the hue immediately afterwards.
+			adjustingBrightness = true;
+
+			led_Brightness = UINT8_MAX;
+			led_RGB = CRGB(UINT8_MAX, UINT8_MAX, UINT8_MAX);
+
+			ledController_Door->showColor(led_RGB, led_Brightness);
+
+			// Set to maximum possible value to avoid running this when unwanted.
+			rotaryEncoder_SWLongPressMillis = UINT32_MAX;
+
+			return;
+		}
 	}
 
-	rotaryEncoder_LastSwitch = rotaryEncoder_SW;
+	rotaryEncoder_LastSW = rotaryEncoder_SW;
 
 	// Handle rotation changes of the rotary encoder.
 	int8_t rotaryEncoder_Value;
 
 	if (rotaryEncoder_Value = rotaryEncoder_ReadNewRotation()) {
-
-		unsigned long now = millis();
 
 		unsigned long millisDelta = now - rotaryEncoder_LastMillis;
 
@@ -106,10 +134,14 @@ void loop() {
 		if (adjustingBrightness)
 			led_Brightness += (increment * rotaryEncoder_Value);
 
-		else
+		else {
+
 			led_Hue += (increment * rotaryEncoder_Value);
 
-		ledController_Door->showColor(CHSV(led_Hue, UINT8_MAX, UINT8_MAX), led_Brightness);
+			hsv2rgb_rainbow(CHSV(led_Hue, UINT8_MAX, UINT8_MAX), led_RGB);
+		}
+
+		ledController_Door->showColor(led_RGB, led_Brightness);
 	}
 }
 
