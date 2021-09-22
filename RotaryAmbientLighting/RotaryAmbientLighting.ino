@@ -81,7 +81,7 @@ void loop() {
 			adjustingBrightness = !adjustingBrightness;
 
 			// Set the long press millis.
-			rotaryEncoder_SWLongPressMillis = now + ROTARY_SW_LONG_PRESS_MILLIS;
+			rotaryEncoder_SWLongPressMillis = now + ROTARY_ENCODER_SW_LONG_PRESS_MILLIS;
 		}
 		// At this point, the switch is held. Check if we've exceeded the required time delay before handling.
 		else if (now > rotaryEncoder_SWLongPressMillis) {
@@ -114,18 +114,18 @@ void loop() {
 
 		int8_t increment;
 
-		if (millisDelta > ROTARY_MILLIS_SLOW)
-			increment = ROTARY_INCREMENT_SLOW;
+		if (millisDelta > ROTARY_ENCODER_MILLIS_SLOW)
+			increment = ROTARY_ENCODER_INCREMENT_SLOW;
 
-		else if (millisDelta < ROTARY_INCREMENT_FAST)
-			increment = ROTARY_INCREMENT_FAST;
+		else if (millisDelta < ROTARY_ENCODER_INCREMENT_FAST)
+			increment = ROTARY_ENCODER_INCREMENT_FAST;
 
 		else {
 
 			// Calculate the correct increment based on the distance between the
 			// 'fast' and 'slow' velocities. Uses */ 100 to avoid floating point math.
-			increment = ROTARY_INCREMENT_FAST - ((ROTARY_INCREMENT_FAST - ROTARY_INCREMENT_SLOW)
-				* ((millisDelta / (ROTARY_MILLIS_SLOW - ROTARY_MILLIS_FAST) * 100))) / 100;
+			increment = ROTARY_ENCODER_INCREMENT_FAST - ((ROTARY_ENCODER_INCREMENT_FAST - ROTARY_ENCODER_INCREMENT_SLOW)
+				* ((millisDelta / (ROTARY_ENCODER_MILLIS_SLOW - ROTARY_ENCODER_MILLIS_FAST) * 100))) / 100;
 		}
 
 		rotaryEncoder_LastMillis = now;

@@ -66,24 +66,24 @@
 /*
  * @brief Defines the increment during "fast" velocities.
  */
-#define ROTARY_INCREMENT_FAST 15
+#define ROTARY_ENCODER_INCREMENT_FAST 15
 
 /*
  * @brief Defines the increment during "slow" velocities.
  */
-#define ROTARY_INCREMENT_SLOW 1
+#define ROTARY_ENCODER_INCREMENT_SLOW 1
 
 /*
  * @brief Defines the millisecond threshold to determine a "fast" velocity.
  */
-#define ROTARY_MILLIS_FAST 20
+#define ROTARY_ENCODER_MILLIS_FAST 20
 
 /*
  * @brief Defines the millisecond threshold to determine a "slow" velocity.
  */
-#define ROTARY_MILLIS_SLOW 200
+#define ROTARY_ENCODER_MILLIS_SLOW 200
 
 /*
  * @brief Defines how long the rotary encoders switch (SW) needs to be held for to be considered a "long press", in milliseconds.
  */
-#define ROTARY_SW_LONG_PRESS_MILLIS 3000
+#define ROTARY_ENCODER_SW_LONG_PRESS_MILLIS 3000
