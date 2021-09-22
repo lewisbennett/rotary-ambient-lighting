@@ -9,46 +9,6 @@
 #define HEADLIGHT_PIN 5
 
 /*
- * @brief Defines the total number of LEDs being controlled in the footwell.
- */
-#define LED_COUNT_DOOR 12
-
-/*
- * @brief Defines the LED control order in the footwell.
- */
-#define LED_ORDER_DOOR GRB
-
-/*
- * @brief Defines the digital pin (not physical pin) to use for LED output in the footwell.
- */
-#define LED_PIN_DOOR 7
-
-/*
- * @brief Defines the type of LED being controlled in the footwell.
- */
-#define LED_TYPE_DOOR WS2812
-
-/*
- * @brief Defines the total number of LEDs being controlled in the footwell.
- */
-#define LED_COUNT_FOOTWELL 16
-
-/*
- * @brief Defines the LED control order in the footwell.
- */
-#define LED_ORDER_FOOTWELL GRB
-
-/*
- * @brief Defines the digital pin (not physical pin) to use for LED output in the footwell.
- */
-#define LED_PIN_FOOTWELL 6
-
-/*
- * @brief Defines the type of LED being controlled in the footwell.
- */
-#define LED_TYPE_FOOTWELL WS2812
-
-/*
  * @brief Defines the maximum possible daytime brightness.
  */
 #define MAX_BRIGHTNESS_DAY UINT8_MAX

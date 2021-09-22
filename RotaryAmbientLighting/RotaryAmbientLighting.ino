@@ -12,6 +12,9 @@
 // LED control library.
 #include <FastLED.h>
 
+// The sketch's LED configuration.
+#include "LED_Configuration.h"
+
 // Rotary encoder definitions.
 #include "RotaryEncoder.h"
 
@@ -34,8 +37,15 @@ uint8_t led_Brightness, led_Hue;
 CRGB led_RGB;
 
 // LED control variables.
-CLEDController* ledController_Door, * ledController_Footwell;
-CRGB leds_Door[LED_COUNT_DOOR], leds_Footwell[LED_COUNT_FOOTWELL];
+#ifdef LED_ENABLE_ACTIVE
+
+CLEDController* ledController_Active;
+CRGB leds_Active[LED_COUNT_ACTIVE];
+
+#endif
+
+CLEDController* ledController_Passive;
+CRGB leds_Passive[LED_COUNT_PASSIVE];
 
 // Used to calculate the velocity of the rotary encoder for calculating acceleration.
 unsigned long rotaryEncoder_LastMillis;
@@ -55,8 +65,13 @@ void setup() {
 	// Initialize the rotary encoder.
 	rotaryEncoder_Init();
 
-	ledController_Door = &FastLED.addLeds<LED_TYPE_DOOR, LED_PIN_DOOR, LED_ORDER_DOOR>(leds_Door, LED_COUNT_DOOR);
-	ledController_Footwell = &FastLED.addLeds<LED_TYPE_FOOTWELL, LED_PIN_FOOTWELL, LED_ORDER_FOOTWELL>(leds_Footwell, LED_COUNT_FOOTWELL);
+#ifdef LED_ENABLE_ACTIVE
+
+	ledController_Active = &FastLED.addLeds<LED_TYPE_ACTIVE, LED_PIN_ACTIVE, LED_ORDER_ACTIVE>(leds_Active, LED_COUNT_ACTIVE);
+
+#endif
+
+	ledController_Passive = &FastLED.addLeds<LED_TYPE_PASSIVE, LED_PIN_PASSIVE, LED_ORDER_PASSIVE>(leds_Passive, LED_COUNT_PASSIVE);
 }
 
 int8_t rotaryEncoder_LastSW;
@@ -94,7 +109,7 @@ void loop() {
 			led_Brightness = UINT8_MAX;
 			led_RGB = CRGB(UINT8_MAX, UINT8_MAX, UINT8_MAX);
 
-			ledController_Door->showColor(led_RGB, led_Brightness);
+			led_ShowColor();
 
 			// Set to maximum possible value to avoid running this when unwanted.
 			rotaryEncoder_SWLongPressMillis = UINT32_MAX;
@@ -141,8 +156,22 @@ void loop() {
 			hsv2rgb_rainbow(CHSV(led_Hue, UINT8_MAX, UINT8_MAX), led_RGB);
 		}
 
-		ledController_Door->showColor(led_RGB, led_Brightness);
+		led_ShowColor();
 	}
 }
 
 #pragma endregion
+
+void led_ShowColor() {
+
+#ifdef LED_ENABLE_ACTIVE
+
+	// TODO
+	// Check whether door is open, as we can't change the color if it is.
+	if (true)
+		ledController_Active->showColor(led_RGB, led_Brightness);
+
+#endif
+
+	ledController_Passive->showColor(led_RGB, led_Brightness);
+}
