@@ -38,22 +38,23 @@
 // Determines whether alterations to the rotary encoder's rotation affect hue or brightness.
 boolean adjustingBrightness;
 
-// Values that can be modified for LED display.
-uint8_t led_Brightness, led_Hue;
-CRGB led_RGB;
+// Tracks the configured hue.
+uint8_t led_Hue;
 
 // LED control variables.
 #ifdef LED_ENABLE_ACTIVE
 
+uint8_t led_ActiveConfiguredBrightness, led_ActiveCurrentBrightness;
 CLEDController* ledController_Active;
-CRGB leds_Active[LED_COUNT_ACTIVE];
+CRGB leds_Active[LED_COUNT_ACTIVE], led_ActiveConfiguredRGB, led_ActiveCurrentRGB;
 
 #endif
 
 #ifdef LED_ENABLE_PASSIVE
 
+uint8_t led_PassiveCurrentBrightness;
 CLEDController* ledController_Passive;
-CRGB leds_Passive[LED_COUNT_PASSIVE];
+CRGB leds_Passive[LED_COUNT_PASSIVE], led_PassiveCurrentRGB;
 
 #endif
 
@@ -120,8 +121,19 @@ void loop() {
 			// mode to avoid accidentally changing the hue immediately afterwards.
 			adjustingBrightness = true;
 
-			led_Brightness = UINT8_MAX;
-			led_RGB = CRGB(UINT8_MAX, UINT8_MAX, UINT8_MAX);
+#ifdef LED_ENABLE_ACTIVE
+
+			led_ActiveConfiguredBrightness = UINT8_MAX;
+			led_ActiveConfiguredRGB = CRGB(UINT8_MAX, UINT8_MAX, UINT8_MAX);
+
+#endif
+
+#ifdef LED_ENABLE_PASSIVE
+
+			led_PassiveCurrentBrightness = UINT8_MAX;
+			led_PassiveCurrentRGB = CRGB(UINT8_MAX, UINT8_MAX, UINT8_MAX);
+
+#endif
 
 			led_ShowColor();
 
@@ -159,15 +171,42 @@ void loop() {
 
 		rotaryEncoder_LastMillis = now;
 
-		// Adjust either the hue or brightness depending on the current mode.
-		if (adjustingBrightness)
-			led_Brightness += (increment * rotaryEncoder_Value);
+		increment *= rotaryEncoder_Value;
 
+		// Adjust either the hue or brightness depending on the current mode.
+		if (adjustingBrightness) {
+
+#ifdef LED_ENABLE_ACTIVE
+
+			led_ActiveConfiguredBrightness += increment;
+
+#endif
+
+#ifdef LED_ENABLE_PASSIVE
+
+			led_PassiveCurrentBrightness += increment;
+
+#endif
+		}
 		else {
 
 			led_Hue += (increment * rotaryEncoder_Value);
 
-			hsv2rgb_rainbow(CHSV(led_Hue, UINT8_MAX, UINT8_MAX), led_RGB);
+			CRGB newRgb;
+
+			hsv2rgb_rainbow(CHSV(led_Hue, UINT8_MAX, UINT8_MAX), newRgb);
+
+#ifdef LED_ENABLE_ACTIVE
+
+			led_ActiveConfiguredRGB = newRgb;
+
+#endif
+
+#ifdef LED_ENABLE_PASSIVE
+
+			led_PassiveCurrentRGB = newRgb;
+
+#endif
 		}
 
 		led_ShowColor();
@@ -183,13 +222,13 @@ void led_ShowColor() {
 	// TODO
 	// Check whether door is open, as we can't change the color if it is.
 	if (true)
-		ledController_Active->showColor(led_RGB, led_Brightness);
+		ledController_Active->showColor(led_ActiveConfiguredRGB, led_ActiveConfiguredBrightness);
 
 #endif
 
 #ifdef LED_ENABLE_PASSIVE
 
-	ledController_Passive->showColor(led_RGB, led_Brightness);
+	ledController_Passive->showColor(led_PassiveCurrentRGB, led_PassiveCurrentBrightness);
 
 #endif
 }
