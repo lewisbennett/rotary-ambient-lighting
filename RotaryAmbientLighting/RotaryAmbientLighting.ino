@@ -62,7 +62,10 @@ CRGB leds_Passive[LED_COUNT_PASSIVE], led_PassiveCurrentRGB;
 unsigned long rotaryEncoder_LastMillis;
 
 // Used to track the state of the rotary encoder's switch so we can detect new values.
-boolean rotaryEncoder_LastSwitch;
+int8_t rotaryEncoder_LastSwitch;
+
+// Used to track when in the future a long press will have been achieved.
+unsigned long rotaryEncoder_SwitchLongPressMillis;
 
 #pragma endregion
 
@@ -89,10 +92,6 @@ void setup() {
 #endif
 }
 
-int8_t rotaryEncoder_LastSW;
-
-unsigned long rotaryEncoder_SWLongPressMillis;
-
 /*
  * @brief Runs continuously.
  */
@@ -101,20 +100,20 @@ void loop() {
 	unsigned long now = millis();
 
 	// Handle press of rotary encoder's switch.
-	int8_t rotaryEncoder_SW = rotaryEncoder_ReadSwitch();
+	int8_t rotaryEncoder_Switch = rotaryEncoder_ReadSwitch();
 
-	if (rotaryEncoder_SW == 1) {
+	if (rotaryEncoder_Switch == 1) {
 
 		// Handle single press of the switch.
-		if (rotaryEncoder_SW != rotaryEncoder_LastSW) {
+		if (rotaryEncoder_Switch != rotaryEncoder_LastSwitch) {
 
 			adjustingBrightness = !adjustingBrightness;
 
 			// Set the long press millis.
-			rotaryEncoder_SWLongPressMillis = now + ROTARY_ENCODER_SW_LONG_PRESS_MILLIS;
+			rotaryEncoder_SwitchLongPressMillis = now + ROTARY_ENCODER_SW_LONG_PRESS_MILLIS;
 		}
 		// At this point, the switch is held. Check if we've exceeded the required time delay before handling.
-		else if (now > rotaryEncoder_SWLongPressMillis) {
+		else if (now > rotaryEncoder_SwitchLongPressMillis) {
 
 			// Long pressing resets the displayed color to white.
 			// This is the only way to access this color, so enable adjusting brightness
@@ -138,13 +137,13 @@ void loop() {
 			led_ShowColor();
 
 			// Set to maximum possible value to avoid running this when unwanted.
-			rotaryEncoder_SWLongPressMillis = UINT32_MAX;
+			rotaryEncoder_SwitchLongPressMillis = UINT32_MAX;
 
 			return;
 		}
 	}
 
-	rotaryEncoder_LastSW = rotaryEncoder_SW;
+	rotaryEncoder_LastSwitch = rotaryEncoder_Switch;
 
 	// Handle rotation changes of the rotary encoder.
 	int8_t rotaryEncoder_Value;
