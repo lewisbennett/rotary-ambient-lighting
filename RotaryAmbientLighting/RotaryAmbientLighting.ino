@@ -166,10 +166,10 @@ void loop() {
 				// TODO
 				// Check if the headlights are on. A different value should be altered depending on the state.
 				if (true)
-					led_BrightnessDay += increment;
+					incrementWithoutOverflow(&led_BrightnessDay, increment);
 
 				else
-					led_BrightnessNight += increment;
+					incrementWithoutOverflow(&led_BrightnessNight, increment);
 
 				break;
 
@@ -178,7 +178,7 @@ void loop() {
 				break;
 
 			case SATURATION:
-				led_Saturation += increment;
+				incrementWithoutOverflow(&led_Saturation, increment);
 				break;
 		}
 
@@ -189,6 +189,18 @@ void loop() {
 }
 
 #pragma endregion
+
+void incrementWithoutOverflow(uint8_t* in, int8_t increment) {
+
+	if (increment > 0 && uint8_t(in + increment) < *in)
+		*in = UINT8_MAX;
+
+	else if (increment < 0 && uint8_t(in + increment) > *in)
+		*in = 0;
+
+	else
+		*in += increment;
+}
 
 void led_ShowColor() {
 
