@@ -27,6 +27,12 @@
 
 #endif
 
+#if !defined(LED_ENABLE_ACTIVE) && !defined(LED_ENABLE_PASSIVE)
+
+	#error Either LED_ENABLE_ACTIVE or LED_ENABLE_PASSIVE must be defined.
+
+#endif
+
 #pragma region Variables
 
 // Determines whether alterations to the rotary encoder's rotation affect hue or brightness.
@@ -44,8 +50,12 @@ CRGB leds_Active[LED_COUNT_ACTIVE];
 
 #endif
 
+#ifdef LED_ENABLE_PASSIVE
+
 CLEDController* ledController_Passive;
 CRGB leds_Passive[LED_COUNT_PASSIVE];
+
+#endif
 
 // Used to calculate the velocity of the rotary encoder for calculating acceleration.
 unsigned long rotaryEncoder_LastMillis;
@@ -71,7 +81,11 @@ void setup() {
 
 #endif
 
+#ifdef LED_ENABLE_PASSIVE
+
 	ledController_Passive = &FastLED.addLeds<LED_TYPE_PASSIVE, LED_PIN_PASSIVE, LED_ORDER_PASSIVE>(leds_Passive, LED_COUNT_PASSIVE);
+
+#endif
 }
 
 int8_t rotaryEncoder_LastSW;
@@ -173,5 +187,9 @@ void led_ShowColor() {
 
 #endif
 
+#ifdef LED_ENABLE_PASSIVE
+
 	ledController_Passive->showColor(led_RGB, led_Brightness);
+
+#endif
 }

@@ -16,6 +16,13 @@
 #define LED_ENABLE_ACTIVE
 
 /*
+ * @brief Defines whether 'passive LEDs' should be enabled.
+ * Passive LEDs don't react to additional inputs like active LEDs.
+ * Comment this line out to disable passive LEDs.
+ */
+#define LED_ENABLE_PASSIVE
+
+/*
  * @brief Defines the LED control order of the 'active LEDs'. Requires ENABLE_ACTIVE_LEDS to be defined.
  */
 #define LED_ORDER_ACTIVE GRB
