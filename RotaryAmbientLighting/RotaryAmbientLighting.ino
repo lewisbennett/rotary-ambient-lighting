@@ -33,28 +33,30 @@
 
 #endif
 
+enum ADJUSTING_MODE { HUE = 0x01, SATURATION = 0x02, BRIGHTNESS = 0x04 };
+
 #pragma region Variables
 
-// Determines whether alterations to the rotary encoder's rotation affect hue or brightness.
-boolean adjustingBrightness;
+// Determines the value to adjust from detected inputs.
+uint8_t led_AdjustingMode = HUE;
 
-// Tracks the configured hue.
-uint8_t led_Hue;
+// Tracks the configured brightness, hue and saturation.
+uint8_t led_BrightnessDay, led_BrightnessNight, led_Hue, led_Saturation;
+
+CRGB led_RGB;
 
 // LED control variables.
 #ifdef LED_ENABLE_ACTIVE
 
-uint8_t led_ActiveConfiguredBrightness, led_ActiveCurrentBrightness;
 CLEDController* ledController_Active;
-CRGB leds_Active[LED_COUNT_ACTIVE], led_ActiveConfiguredRGB, led_ActiveCurrentRGB;
+CRGB leds_Active[LED_COUNT_ACTIVE];
 
 #endif
 
 #ifdef LED_ENABLE_PASSIVE
 
-uint8_t led_PassiveCurrentBrightness;
 CLEDController* ledController_Passive;
-CRGB leds_Passive[LED_COUNT_PASSIVE], led_PassiveCurrentRGB;
+CRGB leds_Passive[LED_COUNT_PASSIVE];
 
 #endif
 
@@ -107,7 +109,7 @@ void loop() {
 		// Handle single press of the switch.
 		if (rotaryEncoder_Switch != rotaryEncoder_LastSwitch) {
 
-			adjustingBrightness = !adjustingBrightness;
+			led_AdjustingMode = (led_AdjustingMode & HUE) == 1 ? SATURATION : HUE;
 
 			// Set the long press millis.
 			rotaryEncoder_SwitchLongPressMillis = now + ROTARY_ENCODER_SW_LONG_PRESS_MILLIS;
@@ -118,23 +120,7 @@ void loop() {
 			// Long pressing resets the displayed color to white.
 			// This is the only way to access this color, so enable adjusting brightness
 			// mode to avoid accidentally changing the hue immediately afterwards.
-			adjustingBrightness = true;
-
-#ifdef LED_ENABLE_ACTIVE
-
-			led_ActiveConfiguredBrightness = UINT8_MAX;
-			led_ActiveConfiguredRGB = CRGB(UINT8_MAX, UINT8_MAX, UINT8_MAX);
-
-#endif
-
-#ifdef LED_ENABLE_PASSIVE
-
-			led_PassiveCurrentBrightness = UINT8_MAX;
-			led_PassiveCurrentRGB = CRGB(UINT8_MAX, UINT8_MAX, UINT8_MAX);
-
-#endif
-
-			led_ShowColor();
+			led_AdjustingMode = BRIGHTNESS;
 
 			// Set to maximum possible value to avoid running this when unwanted.
 			rotaryEncoder_SwitchLongPressMillis = UINT32_MAX;
@@ -173,40 +159,30 @@ void loop() {
 		increment *= rotaryEncoder_Value;
 
 		// Adjust either the hue or brightness depending on the current mode.
-		if (adjustingBrightness) {
+		switch (led_AdjustingMode) {
 
-#ifdef LED_ENABLE_ACTIVE
+			case BRIGHTNESS:
 
-			led_ActiveConfiguredBrightness += increment;
+				// TODO
+				// Check if the headlights are on. A different value should be altered depending on the state.
+				if (true)
+					led_BrightnessDay += increment;
 
-#endif
+				else
+					led_BrightnessNight += increment;
 
-#ifdef LED_ENABLE_PASSIVE
+				break;
 
-			led_PassiveCurrentBrightness += increment;
+			case HUE:
+				led_Hue += increment;
+				break;
 
-#endif
+			case SATURATION:
+				led_Saturation += increment;
+				break;
 		}
-		else {
 
-			led_Hue += (increment * rotaryEncoder_Value);
-
-			CRGB newRgb;
-
-			hsv2rgb_rainbow(CHSV(led_Hue, UINT8_MAX, UINT8_MAX), newRgb);
-
-#ifdef LED_ENABLE_ACTIVE
-
-			led_ActiveConfiguredRGB = newRgb;
-
-#endif
-
-#ifdef LED_ENABLE_PASSIVE
-
-			led_PassiveCurrentRGB = newRgb;
-
-#endif
-		}
+		hsv2rgb_rainbow(CHSV(led_Hue, led_Saturation, UINT8_MAX), led_RGB);
 
 		led_ShowColor();
 	}
@@ -220,14 +196,15 @@ void led_ShowColor() {
 
 	// TODO
 	// Check whether door is open, as we can't change the color if it is.
+	// Also, check whether to use day or night brightness setting.
 	if (true)
-		ledController_Active->showColor(led_ActiveConfiguredRGB, led_ActiveConfiguredBrightness);
+		ledController_Active->showColor(led_RGB, led_BrightnessDay);
 
 #endif
 
 #ifdef LED_ENABLE_PASSIVE
 
-	ledController_Passive->showColor(led_PassiveCurrentRGB, led_PassiveCurrentBrightness);
+	ledController_Passive->showColor(led_RGB, led_BrightnessDay);
 
 #endif
 }
